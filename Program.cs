@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using StreamingApiDemo.Registry;
+using StreamingApiDemo.Repositories;
 using StreamingApiDemo.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,11 +9,17 @@ builder.Services.RegisterServices();
 
 
 var app = builder.Build();
+var stoppingToken = app.Lifetime.ApplicationStopping;
+
+using var scope = app.Services.CreateScope();
+var repo = scope.ServiceProvider.GetRequiredService<IProductRepository>();
+await repo.InitializeAsync(stoppingToken);
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-app.MapGet("/products/stream", static async (HttpContext context, IProductService service,
+app.MapGet("/products/stream", static async (HttpContext context,
+                                             IProductService service,
                                              [FromServices] JsonSerializerOptions jsonOptions,
                                              [FromServices] ILogger<Program> logger,
                                              CancellationToken cancellationToken) =>
@@ -38,4 +45,4 @@ app.MapGet("/products/stream", static async (HttpContext context, IProductServic
     }
 });
 
-app.Run();
+await app.RunAsync(stoppingToken);

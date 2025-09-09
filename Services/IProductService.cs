@@ -1,8 +1,8 @@
-using StreamingApiDemo.Models;
+using StreamingApiDemo.Dto;
 
 namespace StreamingApiDemo.Services;
 
 public interface IProductService
 {
-    IAsyncEnumerable<Product> StreamProductsAsync(CancellationToken cancellationToken);
+    IAsyncEnumerable<ProductDto> StreamProductsAsync(CancellationToken cancellationToken);
 }

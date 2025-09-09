@@ -1,11 +1,12 @@
 using System.Runtime.CompilerServices;
 using StreamingApiDemo.Models;
+using StreamingApiDemo.Dto;
 
 namespace StreamingApiDemo.Services;
 
 public class HardcodedProductService : IProductService
 {
-    public async IAsyncEnumerable<Product> StreamProductsAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<ProductDto> StreamProductsAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
         List<Product> products =
         [
@@ -21,7 +22,7 @@ public class HardcodedProductService : IProductService
         {
             cancellationToken.ThrowIfCancellationRequested();
             await Task.Delay(500, cancellationToken);
-            yield return product;
+            yield return new ProductDto(product.Id, product.Name, product.Price);
         }
     }
 }
