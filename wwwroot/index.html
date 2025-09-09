@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Streaming Products</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+    }
+    h1 {
+      color: #333;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.75rem;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    tbody tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+  <h1>Live Product Stream</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Price (Rs)</th>
+      </tr>
+    </thead>
+    <tbody id="product-table-body">
+    </tbody>
+  </table>
+
+  <script>
+    const tableBody = document.getElementById("product-table-body");
+
+    fetch("/products/stream").then(response => {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      let buffer = "";
+
+      function processChunk({ done, value }) {
+        if (done) return;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          if (line.trim()) {
+            const product = JSON.parse(line);
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+              <td>${product.id}</td>
+              <td>${product.name}</td>
+              <td>${Number(product.price || 0).toFixed(2)}</td>
+            `;
+            tableBody.appendChild(row);
+          }
+        }
+
+        return reader.read().then(processChunk);
+      }
+
+      reader.read().then(processChunk);
+    });
+  </script>
+</body>
+</html>
